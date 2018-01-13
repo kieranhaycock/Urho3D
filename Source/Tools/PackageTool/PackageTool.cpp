@@ -48,8 +48,16 @@ struct FileEntry
     unsigned checksum_;
 };
 
-SharedPtr<Context> context_(new Context());
-SharedPtr<FileSystem> fileSystem_(new FileSystem(context_));
+Context* GetContext() {
+    static SharedPtr<Context> context_(new Context());
+    return context_;
+}
+
+FileSystem* GetFileSystem() {
+    static SharedPtr<FileSystem> fileSystem_(new FileSystem(GetContext()));
+    return fileSystem_;
+}
+
 String basePath_;
 Vector<FileEntry> entries_;
 unsigned checksum_ = 0;
@@ -57,7 +65,7 @@ bool compress_ = false;
 bool quiet_ = false;
 unsigned blockSize_ = COMPRESSED_BLOCK_SIZE;
 
-String ignoreExtensions_[] = {
+const char* ignoreExtensions_[] = {
     ".bak",
     ".rule",
     ""
@@ -137,7 +145,7 @@ void Run(const Vector<String>& arguments)
 
         // Get the file list recursively
         Vector<String> fileNames;
-        fileSystem_->ScanDir(fileNames, dirName, "*.*", SCAN_FILES, true);
+        GetFileSystem()->ScanDir(fileNames, dirName, "*.*", SCAN_FILES, true);
         if (!fileNames.Size())
             ErrorExit("No files found");
 
@@ -145,7 +153,7 @@ void Run(const Vector<String>& arguments)
         for (unsigned i = fileNames.Size() - 1; i < fileNames.Size(); --i)
         {
             String extension = GetExtension(fileNames[i]);
-            for (unsigned j = 0; j < ignoreExtensions_[j].Length(); ++j)
+            for (unsigned j = 0; j < strlen(ignoreExtensions_[j]); ++j)
             {
                 if (extension == ignoreExtensions_[j])
                 {
@@ -162,7 +170,7 @@ void Run(const Vector<String>& arguments)
     }
     else
     {
-        SharedPtr<PackageFile> packageFile(new PackageFile(context_, packageName));
+        SharedPtr<PackageFile> packageFile(new PackageFile(GetContext(), packageName));
         bool outputCompressionRatio = false;
         switch (arguments[0][1])
         {
@@ -206,7 +214,7 @@ void Run(const Vector<String>& arguments)
 void ProcessFile(const String& fileName, const String& rootDir)
 {
     String fullPath = rootDir + "/" + fileName;
-    File file(context_);
+    File file(GetContext());
     if (!file.Open(fullPath))
         ErrorExit("Could not open file " + fileName);
     if (!file.GetSize())
@@ -225,7 +233,7 @@ void WritePackageFile(const String& fileName, const String& rootDir)
     if (!quiet_)
         PrintLine("Writing package");
 
-    File dest(context_);
+    File dest(GetContext());
     if (!dest.Open(fileName, FILE_WRITE))
         ErrorExit("Could not open output file " + fileName);
 
@@ -250,7 +258,7 @@ void WritePackageFile(const String& fileName, const String& rootDir)
         lastOffset = entries_[i].offset_ = dest.GetSize();
         String fileFullPath = rootDir + "/" + entries_[i].name_;
 
-        File srcFile(context_, fileFullPath);
+        File srcFile(GetContext(), fileFullPath);
         if (!srcFile.IsOpen())
             ErrorExit("Could not open file " + fileFullPath);
 

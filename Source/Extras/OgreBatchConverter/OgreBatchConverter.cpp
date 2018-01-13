@@ -5,29 +5,34 @@
 #include <Urho3D/Core/ProcessUtils.h>
 #include <Urho3D/IO/FileSystem.h>
 
-#include <cstdio>
-
 using namespace Urho3D;
 
-SharedPtr<Context> context(new Context());
-SharedPtr<FileSystem> fileSystem(new FileSystem(context));
+Context* GetContext() {
+    static SharedPtr<Context> context_(new Context());
+    return context_;
+}
+
+FileSystem* GetFileSystem() {
+    static SharedPtr<FileSystem> fileSystem_(new FileSystem(GetContext()));
+    return fileSystem_;
+}
 
 int main(int argc, char** argv)
 {
     // Take in account args and place on OgreImporter args
     const Vector<String>& args = ParseArguments(argc, argv);
     Vector<String> files;
-    String currentDir = fileSystem->GetCurrentDir();
+    String currentDir = GetFileSystem()->GetCurrentDir();
 
     // Try to execute OgreImporter from same directory as this executable
-    String ogreImporterName = fileSystem->GetProgramDir() + "OgreImporter";
+    String ogreImporterName = GetFileSystem()->GetProgramDir() + "OgreImporter";
 
     printf("\n\nOgreBatchConverter requires OgreImporter.exe on same directory");
     printf("\nSearching Ogre file in Xml format in %s\n" ,currentDir.CString());
-    fileSystem->ScanDir(files, currentDir, "*.xml", SCAN_FILES, true);
+    GetFileSystem()->ScanDir(files, currentDir, "*.xml", SCAN_FILES, true);
     printf("\nFound %d files\n", files.Size());
     #ifdef WIN32
-    if (files.Size()) fileSystem->SystemCommand("pause");
+    if (files.Size()) GetFileSystem()->SystemCommand("pause");
     #endif
 
     for (unsigned i = 0 ; i < files.Size(); i++)
@@ -42,12 +47,12 @@ int main(int argc, char** argv)
             cmdPreview += " " + cmdArgs[j];
 
         printf("\n%s", cmdPreview.CString());
-        fileSystem->SystemRun(ogreImporterName, cmdArgs);
+        GetFileSystem()->SystemRun(ogreImporterName, cmdArgs);
     }
 
     printf("\nExit\n");
     #ifdef WIN32
-    fileSystem->SystemCommand("pause");
+    GetFileSystem()->SystemCommand("pause");
     #endif
 
     return 0;

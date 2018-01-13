@@ -143,7 +143,11 @@ const char *transformSuffix[TransformationComp_MAXIMUM] =
 
 static const unsigned MAX_CHANNELS = 4;
 
-SharedPtr<Context> context_(new Context());
+Context* GetContext() {
+    static SharedPtr<Context> context_(new Context());
+    return context_;
+}
+
 const aiScene* scene_ = nullptr;
 aiNode* rootNode_ = nullptr;
 String inputName_;
@@ -174,7 +178,11 @@ unsigned maxBones_ = 64;
 Vector<String> nonSkinningBoneIncludes_;
 Vector<String> nonSkinningBoneExcludes_;
 
-HashSet<aiAnimation*> allAnimations_;
+HashSet<aiAnimation*>& GetAllAnimations() {
+    static HashSet<aiAnimation*> allAnimations_;
+    return allAnimations_;
+}
+
 PODVector<aiAnimation*> sceneAnimations_;
 
 float defaultTicksPerSecond_ = 4800.0f;
@@ -316,13 +324,13 @@ void Run(const Vector<String>& arguments)
         );
     }
 
-    context_->RegisterSubsystem(new FileSystem(context_));
-    context_->RegisterSubsystem(new ResourceCache(context_));
-    context_->RegisterSubsystem(new WorkQueue(context_));
-    RegisterSceneLibrary(context_);
-    RegisterGraphicsLibrary(context_);
+    GetContext()->RegisterSubsystem(new FileSystem(GetContext()));
+    GetContext()->RegisterSubsystem(new ResourceCache(GetContext()));
+    GetContext()->RegisterSubsystem(new WorkQueue(GetContext()));
+    RegisterSceneLibrary(GetContext());
+    RegisterGraphicsLibrary(GetContext());
 #ifdef URHO3D_PHYSICS
-    RegisterPhysicsLibrary(context_);
+    RegisterPhysicsLibrary(GetContext());
 #endif
 
     String command = arguments[0].ToLower();
@@ -927,7 +935,7 @@ void CollectAnimations(OutModel* model)
     for (unsigned i = 0; i < scene->mNumAnimations; ++i)
     {
         aiAnimation* anim = scene->mAnimations[i];
-        if (allAnimations_.Contains(anim))
+        if (GetAllAnimations().Contains(anim))
             continue;
 
         if (model)
@@ -946,13 +954,13 @@ void CollectAnimations(OutModel* model)
             if (modelBoneFound)
             {
                 model->animations_.Push(anim);
-                allAnimations_.Insert(anim);
+                GetAllAnimations().Insert(anim);
             }
         }
         else
         {
             sceneAnimations_.Push(anim);
-            allAnimations_.Insert(anim);
+            GetAllAnimations().Insert(anim);
         }
     }
 
@@ -1006,7 +1014,7 @@ void BuildAndSaveModel(OutModel& model)
 
     PrintLine("Writing model " + rootNodeName);
 
-    SharedPtr<Model> outModel(new Model(context_));
+    SharedPtr<Model> outModel(new Model(GetContext()));
     Vector<PODVector<unsigned> > allBoneMappings;
     BoundingBox box;
 
@@ -1069,8 +1077,8 @@ void BuildAndSaveModel(OutModel& model)
         // Create new buffers if necessary
         if (!combineBuffers || vbVector.Empty())
         {
-            vb = new VertexBuffer(context_);
-            ib = new IndexBuffer(context_);
+            vb = new VertexBuffer(GetContext());
+            ib = new IndexBuffer(GetContext());
 
             if (combineBuffers)
             {
@@ -1098,7 +1106,7 @@ void BuildAndSaveModel(OutModel& model)
         vertexTransform = Matrix3x4(pos, rot, scale);
         normalTransform = rot.RotationMatrix();
 
-        SharedPtr<Geometry> geom(new Geometry(context_));
+        SharedPtr<Geometry> geom(new Geometry(GetContext()));
 
         PrintLine("Writing geometry " + String(i) + " with " + String(mesh->mNumVertices) + " vertices " +
             String(validFaces * 3) + " indices");
@@ -1225,7 +1233,7 @@ void BuildAndSaveModel(OutModel& model)
             outModel->SetGeometryBoneMappings(allBoneMappings);
     }
 
-    File outFile(context_);
+    File outFile(GetContext());
     if (!outFile.Open(model.outName_, FILE_WRITE))
         ErrorExit("Could not open output file " + model.outName_);
     outModel->Save(outFile);
@@ -1234,7 +1242,7 @@ void BuildAndSaveModel(OutModel& model)
     if (!noMaterials_ && saveMaterialList_)
     {
         String materialListName = ReplaceExtension(model.outName_, ".txt");
-        File listFile(context_);
+        File listFile(GetContext());
         if (listFile.Open(materialListName, FILE_WRITE))
         {
             for (unsigned i = 0; i < model.meshes_.Size(); ++i)
@@ -1298,7 +1306,7 @@ void BuildAndSaveAnimations(OutModel* model)
             thisImportStartTime = startTime;
         duration = thisImportEndTime - thisImportStartTime;
 
-        SharedPtr<Animation> outAnim(new Animation(context_));
+        SharedPtr<Animation> outAnim(new Animation(GetContext()));
         outAnim->SetAnimationName(animName);
         outAnim->SetLength(duration * tickConversion);
 
@@ -1486,7 +1494,7 @@ void BuildAndSaveAnimations(OutModel* model)
             }
         }
 
-        File outFile(context_);
+        File outFile(GetContext());
         if (!outFile.Open(animOutName, FILE_WRITE))
             ErrorExit("Could not open output file " + animOutName);
         outAnim->Save(outFile);
@@ -1500,7 +1508,7 @@ void ExportScene(const String& outName, bool asPrefab)
     outScene.rootNode_ = rootNode_;
 
     if (useSubdirs_)
-        context_->GetSubsystem<FileSystem>()->CreateDir(resourcePath_ + "Models");
+        GetContext()->GetSubsystem<FileSystem>()->CreateDir(resourcePath_ + "Models");
 
     CollectSceneModels(outScene, rootNode_);
 
@@ -1638,7 +1646,7 @@ void BuildAndSaveScene(OutScene& scene, bool asPrefab)
     else
         PrintLine("Writing node hierarchy");
 
-    SharedPtr<Scene> outScene(new Scene(context_));
+    SharedPtr<Scene> outScene(new Scene(GetContext()));
 
     if (!asPrefab)
     {
@@ -1670,7 +1678,7 @@ void BuildAndSaveScene(OutScene& scene, bool asPrefab)
         }
     }
 
-    auto* cache = context_->GetSubsystem<ResourceCache>();
+    auto* cache = GetContext()->GetSubsystem<ResourceCache>();
 
     HashMap<aiNode*, Node*> nodeMapping;
 
@@ -1701,7 +1709,7 @@ void BuildAndSaveScene(OutScene& scene, bool asPrefab)
         String modelName = (useSubdirs_ ? "Models/" : "") + GetFileNameAndExtension(model.outName_);
         if (!cache->Exists(modelName))
         {
-            auto* dummyModel = new Model(context_);
+            auto* dummyModel = new Model(GetContext());
             dummyModel->SetName(modelName);
             dummyModel->SetNumGeometries(model.meshes_.Size());
             cache->AddManualResource(dummyModel);
@@ -1715,7 +1723,7 @@ void BuildAndSaveScene(OutScene& scene, bool asPrefab)
             // Create a dummy material so that the reference can be stored
             if (!cache->Exists(matName))
             {
-                auto* dummyMat = new Material(context_);
+                auto* dummyMat = new Material(GetContext());
                 dummyMat->SetName(matName);
                 cache->AddManualResource(dummyMat);
             }
@@ -1782,7 +1790,7 @@ void BuildAndSaveScene(OutScene& scene, bool asPrefab)
         }
     }
 
-    File file(context_);
+    File file(GetContext());
     if (!file.Open(scene.outName_, FILE_WRITE))
         ErrorExit("Could not open output file " + scene.outName_);
     if (!asPrefab)
@@ -1808,7 +1816,7 @@ void BuildAndSaveScene(OutScene& scene, bool asPrefab)
 void ExportMaterials(HashSet<String>& usedTextures)
 {
     if (useSubdirs_)
-        context_->GetSubsystem<FileSystem>()->CreateDir(resourcePath_ + "Materials");
+        GetContext()->GetSubsystem<FileSystem>()->CreateDir(resourcePath_ + "Materials");
 
     for (unsigned i = 0; i < scene_->mNumMaterials; ++i)
         BuildAndSaveMaterial(scene_->mMaterials[i], usedTextures);
@@ -1823,7 +1831,7 @@ void BuildAndSaveMaterial(aiMaterial* material, HashSet<String>& usedTextures)
         matName = GenerateMaterialName(material);
 
     // Do not actually create a material instance, but instead craft an xml file manually
-    XMLFile outMaterial(context_);
+    XMLFile outMaterial(GetContext());
     XMLElement materialElem = outMaterial.CreateRoot("material");
 
     String diffuseTexName;
@@ -1955,7 +1963,7 @@ void BuildAndSaveMaterial(aiMaterial* material, HashSet<String>& usedTextures)
         shadowCullElem.SetString("value", "none");
     }
 
-    auto* fileSystem = context_->GetSubsystem<FileSystem>();
+    auto* fileSystem = GetContext()->GetSubsystem<FileSystem>();
 
     String outFileName = resourcePath_ + (useSubdirs_ ? "Materials/" : "" ) + matName + ".xml";
     if (noOverwriteMaterial_ && fileSystem->FileExists(outFileName))
@@ -1966,7 +1974,7 @@ void BuildAndSaveMaterial(aiMaterial* material, HashSet<String>& usedTextures)
 
     PrintLine("Writing material " + matName);
 
-    File outFile(context_);
+    File outFile(GetContext());
     if (!outFile.Open(outFileName, FILE_WRITE))
         ErrorExit("Could not open output file " + outFileName);
     outMaterial.Save(outFile);
@@ -1974,7 +1982,7 @@ void BuildAndSaveMaterial(aiMaterial* material, HashSet<String>& usedTextures)
 
 void CopyTextures(const HashSet<String>& usedTextures, const String& sourcePath)
 {
-    auto* fileSystem = context_->GetSubsystem<FileSystem>();
+    auto* fileSystem = GetContext()->GetSubsystem<FileSystem>();
 
     if (useSubdirs_)
         fileSystem->CreateDir(resourcePath_ + "Textures");
@@ -2001,14 +2009,14 @@ void CopyTextures(const HashSet<String>& usedTextures, const String& sourcePath)
                 if (!tex->mHeight)
                 {
                     PrintLine("Saving embedded texture " + GetFileNameAndExtension(fullDestName));
-                    File dest(context_, fullDestName, FILE_WRITE);
+                    File dest(GetContext(), fullDestName, FILE_WRITE);
                     dest.Write((const void*)tex->pcData, tex->mWidth);
                 }
                 // RGBA8 texture
                 else
                 {
                     PrintLine("Saving embedded RGBA texture " + GetFileNameAndExtension(fullDestName));
-                    Image image(context_);
+                    Image image(GetContext());
                     image.SetSize(tex->mWidth, tex->mHeight, 4);
                     memcpy(image.GetData(), (const void*)tex->pcData, tex->mWidth * tex->mHeight * 4);
                     image.SavePNG(fullDestName);
@@ -2026,7 +2034,7 @@ void CopyTextures(const HashSet<String>& usedTextures, const String& sourcePath)
                 continue;
             }
             {
-                File test(context_, fullSourceName);
+                File test(GetContext(), fullSourceName);
                 if (!test.GetSize())
                 {
                     PrintLine("Skipping copy of zero-size material texture " + *i);
@@ -2060,9 +2068,9 @@ void CombineLods(const PODVector<float>& lodDistances, const Vector<String>& mod
     for (unsigned i = 0; i < modelNames.Size(); ++i)
     {
         PrintLine("Reading LOD level " + String(i) + ": model " + modelNames[i] + " distance " + String(lodDistances[i]));
-        File srcFile(context_);
+        File srcFile(GetContext());
         srcFile.Open(modelNames[i]);
-        SharedPtr<Model> srcModel(new Model(context_));
+        SharedPtr<Model> srcModel(new Model(GetContext()));
         if (!srcModel->Load(srcFile))
             ErrorExit("Could not load input model " + modelNames[i]);
         srcModels.Push(srcModel);
@@ -2104,7 +2112,7 @@ void CombineLods(const PODVector<float>& lodDistances, const Vector<String>& mod
     PODVector<unsigned> emptyMorphRange;
 
     // Create the final model
-    SharedPtr<Model> outModel(new Model(context_));
+    SharedPtr<Model> outModel(new Model(GetContext()));
     outModel->SetNumGeometries(srcModels[0]->GetNumGeometries());
     for (unsigned i = 0; i < srcModels[0]->GetNumGeometries(); ++i)
     {
@@ -2137,7 +2145,7 @@ void CombineLods(const PODVector<float>& lodDistances, const Vector<String>& mod
 
     // Save the final model
     PrintLine("Writing output model");
-    File outFile(context_);
+    File outFile(GetContext());
     if (!outFile.Open(outName, FILE_WRITE))
         ErrorExit("Could not open output file " + outName);
     outModel->Save(outFile);

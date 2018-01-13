@@ -38,9 +38,21 @@
 
 static const int VERTEX_CACHE_SIZE = 32;
 
-SharedPtr<Context> context_(new Context());
-SharedPtr<XMLFile> meshFile_(new XMLFile(context_));
-SharedPtr<XMLFile> skelFile_(new XMLFile(context_));
+Context* GetContext() {
+    static SharedPtr<Context> context_(new Context());
+    return context_;
+}
+
+XMLFile* GetMeshFile() {
+    static SharedPtr<XMLFile> meshFile_(new XMLFile(GetContext()));
+    return meshFile_;
+}
+
+XMLFile* GetSkelFile() {
+    static SharedPtr<XMLFile> skelFile_(new XMLFile(GetContext()));
+    return skelFile_;
+}
+
 Vector<ModelIndexBuffer> indexBuffers_;
 Vector<ModelVertexBuffer> vertexBuffers_;
 Vector<Vector<ModelSubGeometryLodLevel> > subGeometries_;
@@ -150,11 +162,11 @@ void LoadSkeleton(const String& skeletonFileName)
 {
     // Process skeleton first (if found)
     XMLElement skeletonRoot;
-    File skeletonFileSource(context_);
+    File skeletonFileSource(GetContext());
     skeletonFileSource.Open(skeletonFileName);
-    if (!skelFile_->Load(skeletonFileSource))
+    if (!GetSkelFile()->Load(skeletonFileSource))
         PrintLine("Failed to load skeleton " + skeletonFileName);
-    skeletonRoot = skelFile_->GetRoot();
+    skeletonRoot = GetSkelFile()->GetRoot();
 
     if (skeletonRoot)
     {
@@ -247,12 +259,12 @@ void LoadSkeleton(const String& skeletonFileName)
 
 void LoadMesh(const String& inputFileName, bool generateTangents, bool splitSubMeshes, bool exportMorphs)
 {
-    File meshFileSource(context_);
+    File meshFileSource(GetContext());
     meshFileSource.Open(inputFileName);
-    if (!meshFile_->Load(meshFileSource))
+    if (!GetMeshFile()->Load(meshFileSource))
         ErrorExit("Could not load input file " + inputFileName);
 
-    XMLElement root = meshFile_->GetRoot("mesh");
+    XMLElement root = GetMeshFile()->GetRoot("mesh");
     XMLElement subMeshes = root.GetChild("submeshes");
     XMLElement skeletonLink = root.GetChild("skeletonlink");
     if (root.IsNull())
@@ -851,7 +863,7 @@ void WriteOutput(const String& outputFileName, bool exportAnimations, bool rotat
 
     // Begin serialization
     {
-        File dest(context_);
+        File dest(GetContext());
         if (!dest.Open(outputFileName, FILE_WRITE))
             ErrorExit("Could not open output file " + outputFileName);
 
@@ -927,7 +939,7 @@ void WriteOutput(const String& outputFileName, bool exportAnimations, bool rotat
     if (saveMaterialList)
     {
         String materialListName = ReplaceExtension(outputFileName, ".txt");
-        File listFile(context_);
+        File listFile(GetContext());
         if (listFile.Open(materialListName, FILE_WRITE))
         {
             for (unsigned i = 0; i < materialNames_.Size(); ++i)
@@ -940,7 +952,7 @@ void WriteOutput(const String& outputFileName, bool exportAnimations, bool rotat
             PrintLine("Warning: could not write material list file " + materialListName);
     }
 
-    XMLElement skeletonRoot = skelFile_->GetRoot("skeleton");
+    XMLElement skeletonRoot = GetSkelFile()->GetRoot("skeleton");
     if (skeletonRoot && exportAnimations)
     {
         // Go through animations
@@ -1026,7 +1038,7 @@ void WriteOutput(const String& outputFileName, bool exportAnimations, bool rotat
                 String animationFileName = outputFileName.Replaced(".mdl", "");
                 animationFileName += "_" + newAnimation.name_ + ".ani";
 
-                File dest(context_);
+                File dest(GetContext());
                 if (!dest.Open(animationFileName, FILE_WRITE))
                     ErrorExit("Could not open output file " + animationFileName);
 
