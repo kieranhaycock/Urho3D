@@ -38,7 +38,7 @@ template <class T> struct RandomAccessIterator
 {
     /// Construct.
     RandomAccessIterator() :
-        ptr_(0)
+        ptr_(nullptr)
     {
     }
 

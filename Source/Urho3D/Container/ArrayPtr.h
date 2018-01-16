@@ -36,7 +36,7 @@ template <class T> class SharedArrayPtr
 public:
     /// Construct a null shared array pointer.
     SharedArrayPtr() :
-        ptr_(0),
+        ptr_(nullptr),
         refCount_(nullptr)
     {
     }
@@ -110,7 +110,7 @@ public:
     }
 
     /// Subscript the array.
-    T& operator [](const int index)
+    T& operator [](int index)
     {
         assert(ptr_);
         return ptr_[index];
@@ -201,8 +201,8 @@ private:
                 delete refCount_;
         }
 
-        ptr_ = 0;
-        refCount_ = 0;
+        ptr_ = nullptr;
+        refCount_ = nullptr;
     }
 
     /// Pointer to the array.

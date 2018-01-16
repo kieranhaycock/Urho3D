@@ -24,6 +24,7 @@
 
 #include "../Container/ListBase.h"
 #include <initializer_list>
+#include <utility>
 
 namespace Urho3D
 {
@@ -39,8 +40,8 @@ public:
         Node() = default;
 
         /// Construct with value.
-        explicit Node(const T& value) :
-            value_(value)
+        explicit Node(T  value) :
+            value_(std::move(value))
         {
         }
 
@@ -335,7 +336,7 @@ public:
             for (Iterator i = Begin(); i != End();)
             {
                 FreeNode(static_cast<Node*>(i++.ptr_));
-                i.ptr_->prev_ = 0;
+                i.ptr_->prev_ = nullptr;
             }
 
             head_ = tail_;

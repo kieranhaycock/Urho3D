@@ -20,6 +20,8 @@
 // THE SOFTWARE.
 //
 
+#include <utility>
+
 #include "../Precompiled.h"
 
 #include "../Graphics/Camera.h"
@@ -54,11 +56,11 @@ Viewport::Viewport(Context* context, Scene* scene, Camera* camera, RenderPath* r
     SetRenderPath(renderPath);
 }
 
-Viewport::Viewport(Context* context, Scene* scene, Camera* camera, const IntRect& rect, RenderPath* renderPath) :
+Viewport::Viewport(Context* context, Scene* scene, Camera* camera, IntRect rect, RenderPath* renderPath) :
     Object(context),
     scene_(scene),
     camera_(camera),
-    rect_(rect),
+    rect_(std::move(rect)),
     drawDebug_(true)
 {
     SetRenderPath(renderPath);

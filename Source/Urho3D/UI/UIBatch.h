@@ -44,7 +44,7 @@ public:
     /// Construct with defaults.
     UIBatch();
     /// Construct.
-    UIBatch(UIElement* element, BlendMode blendMode, const IntRect& scissor, Texture* texture, PODVector<float>* vertexData);
+    UIBatch(UIElement* element, BlendMode blendMode, IntRect scissor, Texture* texture, PODVector<float>* vertexData);
 
     /// Set new color for the batch. Overrides gradient.
     void SetColor(const Color& color, bool overrideAlpha = false);

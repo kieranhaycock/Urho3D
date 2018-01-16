@@ -20,6 +20,8 @@
 // THE SOFTWARE.
 //
 
+#include <utility>
+
 #include "../Precompiled.h"
 
 #include "../Graphics/Graphics.h"
@@ -45,10 +47,10 @@ UIBatch::UIBatch() :
     SetDefaultColor();
 }
 
-UIBatch::UIBatch(UIElement* element, BlendMode blendMode, const IntRect& scissor, Texture* texture, PODVector<float>* vertexData) :
+UIBatch::UIBatch(UIElement* element, BlendMode blendMode, IntRect scissor, Texture* texture, PODVector<float>* vertexData) :
     element_(element),
     blendMode_(blendMode),
-    scissor_(scissor),
+    scissor_(std::move(scissor)),
     texture_(texture),
     invTextureSize_(texture ? Vector2(1.0f / (float)texture->GetWidth(), 1.0f / (float)texture->GetHeight()) : Vector2::ONE),
     vertexData_(vertexData),

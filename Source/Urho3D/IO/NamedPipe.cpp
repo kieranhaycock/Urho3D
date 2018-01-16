@@ -205,7 +205,7 @@ bool NamedPipe::IsEof() const
 
 static const char* pipePath = "/tmp/";
 
-#define SAFE_CLOSE(handle) if (handle != -1) { close(handle); handle = -1; }
+#define SAFE_CLOSE(handle) if ((handle) != -1) { close(handle); (handle) = -1; }
 
 bool NamedPipe::Open(const String& pipeName, bool isServer)
 {

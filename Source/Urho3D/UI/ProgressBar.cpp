@@ -72,9 +72,9 @@ void ProgressBar::OnResize(const IntVector2& /*newSize*/, const IntVector2& /*de
     UpdateProgressBar();
 }
 
-void ProgressBar::SetOrientation(Orientation type)
+void ProgressBar::SetOrientation(Orientation orientation)
 {
-    orientation_ = type;
+    orientation_ = orientation;
     UpdateProgressBar();
 }
 

@@ -38,13 +38,13 @@ template <class T> class SharedPtr
 public:
     /// Construct a null shared pointer.
     SharedPtr() noexcept :
-        ptr_(0)
+        ptr_(nullptr)
     {
     }
 
     /// Construct a null shared pointer.
     SharedPtr(std::nullptr_t) noexcept :     // NOLINT
-        ptr_(0)
+        ptr_(nullptr)
     {
     }
 
@@ -126,7 +126,7 @@ public:
     }
 
     /// Subscript the object if applicable.
-    T& operator [](const int index)
+    T& operator [](int index)
     {
         assert(ptr_);
         return ptr_[index];
@@ -182,7 +182,7 @@ public:
     bool Null() const { return ptr_ == 0; }
 
     /// Check if the pointer is not null.
-    bool NotNull() const { return ptr_ != 0; }
+    bool NotNull() const { return ptr_ != nullptr; }
 
     /// Return the raw pointer.
     T* Get() const { return ptr_; }
@@ -194,7 +194,7 @@ public:
     int WeakRefs() const { return ptr_ ? ptr_->WeakRefs() : 0; }
 
     /// Return pointer to the RefCount structure.
-    RefCount* RefCountPtr() const { return ptr_ ? ptr_->RefCountPtr() : 0; }
+    RefCount* RefCountPtr() const { return ptr_ ? ptr_->RefCountPtr() : nullptr; }
 
     /// Return hash value for HashSet & HashMap.
     unsigned ToHash() const { return (unsigned)((size_t)ptr_ / sizeof(T)); }
@@ -215,7 +215,7 @@ private:
         if (ptr_)
         {
             ptr_->ReleaseRef();
-            ptr_ = 0;
+            ptr_ = nullptr;
         }
     }
 
@@ -245,14 +245,14 @@ template <class T> class WeakPtr
 public:
     /// Construct a null weak pointer.
     WeakPtr() noexcept :
-        ptr_(0),
+        ptr_(nullptr),
         refCount_(nullptr)
     {
     }
 
     /// Construct a null weak pointer.
     WeakPtr(std::nullptr_t) noexcept :   // NOLINT
-        ptr_(0),
+        ptr_(nullptr),
         refCount_(nullptr)
     {
     }
@@ -284,7 +284,7 @@ public:
     /// Construct from a raw pointer.
     explicit WeakPtr(T* ptr) noexcept :
         ptr_(ptr),
-        refCount_(ptr ? ptr->RefCountPtr() : 0)
+        refCount_(ptr ? ptr->RefCountPtr() : nullptr)
     {
         AddRef();
     }
@@ -340,7 +340,7 @@ public:
     /// Assign from a raw pointer.
     WeakPtr<T>& operator =(T* ptr)
     {
-        RefCount* refCount = ptr ? ptr->RefCountPtr() : 0;
+        RefCount* refCount = ptr ? ptr->RefCountPtr() : nullptr;
 
         if (ptr_ == ptr && refCount_ == refCount)
             return *this;
@@ -365,10 +365,7 @@ public:
     /// Return raw pointer. If expired, return null.
     T* Get() const
     {
-        if (Expired())
-            return 0;
-        else
-            return ptr_;
+        return Expired() ? nullptr : ptr_;
     }
 
     /// Point to the object.
@@ -388,7 +385,7 @@ public:
     }
 
     /// Subscript the object if applicable.
-    T& operator [](const int index)
+    T& operator [](int index)
     {
         T* rawPtr = Get();
         assert(rawPtr);
@@ -435,10 +432,10 @@ public:
     }
 
     /// Check if the pointer is null.
-    bool Null() const { return refCount_ == 0; }
+    bool Null() const { return refCount_ == nullptr; }
 
     /// Check if the pointer is not null.
-    bool NotNull() const { return refCount_ != 0; }
+    bool NotNull() const { return refCount_ != nullptr; }
 
     /// Return the object's reference count, or 0 if null pointer or if object has expired.
     int Refs() const { return (refCount_ && refCount_->refs_ >= 0) ? refCount_->refs_ : 0; }
@@ -486,8 +483,8 @@ private:
                 delete refCount_;
         }
 
-        ptr_ = 0;
-        refCount_ = 0;
+        ptr_ = nullptr;
+        refCount_ = nullptr;
     }
 
     /// Pointer to the object.
@@ -526,7 +523,7 @@ template <class T> class UniquePtr
 {
 public:
     /// Construct empty.
-    UniquePtr() : ptr_(0) { }
+    UniquePtr() : ptr_(nullptr) { }
 
     /// Construct from pointer.
     explicit UniquePtr(T* ptr) : ptr_(ptr) { }
@@ -592,7 +589,7 @@ public:
     T* Detach()
     {
         T* ptr = ptr_;
-        ptr_ = 0;
+        ptr_ = nullptr;
         return ptr;
     }
 
@@ -606,7 +603,7 @@ public:
     T* Get() const { return ptr_; }
 
     /// Reset.
-    void Reset(T* ptr = 0)
+    void Reset(T* ptr = nullptr)
     {
         CheckedDelete(ptr_);
         ptr_ = ptr;

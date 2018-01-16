@@ -48,7 +48,7 @@ public:
     /// Construct with a full rectangle.
     Viewport(Context* context, Scene* scene, Camera* camera, RenderPath* renderPath = nullptr);
     /// Construct with a specified rectangle.
-    Viewport(Context* context, Scene* scene, Camera* camera, const IntRect& rect, RenderPath* renderPath = nullptr);
+    Viewport(Context* context, Scene* scene, Camera* camera, IntRect rect, RenderPath* renderPath = nullptr);
     /// Destruct.
     ~Viewport() override;
 
@@ -59,7 +59,7 @@ public:
     /// Set view rectangle. A zero rectangle (0 0 0 0) means to use the rendertarget's full dimensions.
     void SetRect(const IntRect& rect);
     /// Set rendering path.
-    void SetRenderPath(RenderPath* path);
+    void SetRenderPath(RenderPath* renderPath);
     /// Set rendering path from an XML file.
     void SetRenderPath(XMLFile* file);
     /// Set whether to render debug geometry. Default true.

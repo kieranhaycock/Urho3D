@@ -163,9 +163,9 @@ void Slider::OnResize(const IntVector2& newSize, const IntVector2& delta)
     UpdateSlider();
 }
 
-void Slider::SetOrientation(Orientation type)
+void Slider::SetOrientation(Orientation orientation)
 {
-    orientation_ = type;
+    orientation_ = orientation;
     UpdateSlider();
 }
 

@@ -22,6 +22,8 @@
 
 #pragma once
 
+#include <utility>
+
 #include "../Container/Ptr.h"
 #include "../Graphics/Drawable.h"
 #include "../Graphics/Material.h"
@@ -144,8 +146,8 @@ struct BatchGroup : public Batch
     }
 
     /// Construct from a batch.
-    explicit BatchGroup(const Batch& batch) :
-        Batch(batch),
+    explicit BatchGroup(Batch  batch) :
+        Batch(std::move(batch)),
         startIndex_(M_MAX_UNSIGNED)
     {
     }

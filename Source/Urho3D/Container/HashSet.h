@@ -27,6 +27,7 @@
 
 #include <cassert>
 #include <initializer_list>
+#include <utility>
 
 namespace Urho3D
 {
@@ -42,8 +43,8 @@ public:
         Node() = default;
 
         /// Construct with key.
-        explicit Node(const T& key) :
-            key_(key)
+        explicit Node(T  key) :
+            key_(std::move(key))
         {
         }
 
@@ -381,7 +382,7 @@ public:
             for (Iterator i = Begin(); i != End();)
             {
                 FreeNode(static_cast<Node*>(i++.ptr_));
-                i.ptr_->prev_ = 0;
+                i.ptr_->prev_ = nullptr;
             }
 
             head_ = tail_;
@@ -475,7 +476,7 @@ public:
             return false;
 
         unsigned hashKey = Hash(key);
-        return FindNode(key, hashKey) != 0;
+        return FindNode(key, hashKey) != nullptr;
     }
 
     /// Return iterator to the beginning.
@@ -514,13 +515,13 @@ private:
             node = node->Down();
         }
 
-        return 0;
+        return nullptr;
     }
 
     /// Find a node and the previous node from the buckets. Do not call if the buckets have not been allocated.
     Node* FindNode(const T& key, unsigned hashKey, Node*& previous) const
     {
-        previous = 0;
+        previous = nullptr;
 
         auto* node = static_cast<Node*>(Ptrs()[hashKey]);
         while (node)
@@ -531,14 +532,14 @@ private:
             node = node->Down();
         }
 
-        return 0;
+        return nullptr;
     }
 
     /// Insert a node into the list. Return the new node.
     Node* InsertNode(Node* dest, const T& key)
     {
         if (!dest)
-            return 0;
+            return nullptr;
 
         Node* newNode = ReserveNode(key);
         Node* prev = dest->Prev();

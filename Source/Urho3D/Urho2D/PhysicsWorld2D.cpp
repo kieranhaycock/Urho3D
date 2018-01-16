@@ -20,6 +20,8 @@
 // THE SOFTWARE.
 //
 
+#include <utility>
+
 #include "../Precompiled.h"
 
 #include "../Core/Context.h"
@@ -569,8 +571,8 @@ class PointQueryCallback : public b2QueryCallback
 {
 public:
     // Construct.
-    PointQueryCallback(const b2Vec2& point, unsigned collisionMask) :
-        point_(point),
+    PointQueryCallback(b2Vec2  point, unsigned collisionMask) :
+        point_(std::move(point)),
         collisionMask_(collisionMask),
         rigidBody_(nullptr)
     {

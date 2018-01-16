@@ -67,7 +67,7 @@
 
 #include "../DebugNew.h"
 
-#define TOUCHID_MASK(id) (1 << id)
+#define TOUCHID_MASK(id) (1 << (id))
 
 namespace Urho3D
 {

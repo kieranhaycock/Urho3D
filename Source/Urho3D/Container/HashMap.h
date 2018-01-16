@@ -29,6 +29,7 @@
 
 #include <cassert>
 #include <initializer_list>
+#include <utility>
 
 namespace Urho3D
 {
@@ -51,9 +52,9 @@ public:
         }
 
         /// Construct with key and value.
-        KeyValue(const T& first, const U& second) :
-            first_(first),
-            second_(second)
+        KeyValue(T  first, U  second) :
+            first_(std::move(first)),
+            second_(std::move(second))
         {
         }
 
@@ -325,12 +326,12 @@ public:
     U* operator [](const T& key) const
     {
         if (!ptrs_)
-            return 0;
+            return nullptr;
 
         unsigned hashKey = Hash(key);
 
         Node* node = FindNode(key, hashKey);
-        return node ? &node->pair_.second_ : 0;
+        return node ? &node->pair_.second_ : nullptr;
     }
 
     /// Populate the map using variadic template. This handles the base case.
@@ -417,7 +418,7 @@ public:
 
         unsigned hashKey = Hash(node->pair_.first_);
 
-        Node* previous = 0;
+        Node* previous = nullptr;
         auto* current = static_cast<Node*>(Ptrs()[hashKey]);
         while (current && current != node)
         {
@@ -447,7 +448,7 @@ public:
             for (Iterator i = Begin(); i != End();)
             {
                 FreeNode(static_cast<Node*>(i++.ptr_));
-                i.ptr_->prev_ = 0;
+                i.ptr_->prev_ = nullptr;
             }
 
             head_ = tail_;
@@ -474,7 +475,7 @@ public:
         Urho3D::Sort(RandomAccessIterator<Node*>(ptrs), RandomAccessIterator<Node*>(ptrs + numKeys), CompareNodes);
 
         head_ = ptrs[0];
-        ptrs[0]->prev_ = 0;
+        ptrs[0]->prev_ = nullptr;
         for (unsigned i = 1; i < numKeys; ++i)
         {
             ptrs[i - 1]->next_ = ptrs[i];
@@ -541,7 +542,7 @@ public:
             return false;
 
         unsigned hashKey = Hash(key);
-        return FindNode(key, hashKey) != 0;
+        return FindNode(key, hashKey) != nullptr;
     }
 
     /// Try to copy value to output. Return true if was found.
@@ -616,13 +617,13 @@ private:
             node = node->Down();
         }
 
-        return 0;
+        return nullptr;
     }
 
     /// Find a node and the previous node from the buckets. Do not call if the buckets have not been allocated.
     Node* FindNode(const T& key, unsigned hashKey, Node*& previous) const
     {
-        previous = 0;
+        previous = nullptr;
 
         auto* node = static_cast<Node*>(Ptrs()[hashKey]);
         while (node)
@@ -633,7 +634,7 @@ private:
             node = node->Down();
         }
 
-        return 0;
+        return nullptr;
     }
 
     /// Insert a key and value and return either the new or existing node.
@@ -677,7 +678,7 @@ private:
     Node* InsertNode(Node* dest, const T& key, const U& value)
     {
         if (!dest)
-            return 0;
+            return nullptr;
 
         Node* newNode = ReserveNode(key, value);
         Node* prev = dest->Prev();

@@ -122,7 +122,7 @@ SharedPtr<WorkItem> WorkQueue::GetFreeItem()
     }
 }
 
-void WorkQueue::AddWorkItem(SharedPtr<WorkItem> item)
+void WorkQueue::AddWorkItem(const SharedPtr<WorkItem>& item)
 {
     if (!item)
     {

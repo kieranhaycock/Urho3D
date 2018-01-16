@@ -22,6 +22,8 @@
 
 #pragma once
 
+#include <utility>
+
 #include "../Container/Hash.h"
 
 namespace Urho3D
@@ -35,9 +37,9 @@ public:
     Pair() = default;
 
     /// Construct with values.
-    Pair(const T& first, const U& second) :
-        first_(first),
-        second_(second)
+    Pair(T  first, U  second) :
+        first_(std::move(first)),
+        second_(std::move(second))
     {
     }
 

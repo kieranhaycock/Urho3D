@@ -441,15 +441,15 @@ bool Image::BeginLoad(Deserializer& source)
                 unsigned numPixels = dataSize / sourcePixelByteSize;
 
 #define ADJUSTSHIFT(mask, l, r) \
-                if (mask && mask >= 0x100) \
+                if ((mask) && (mask) >= 0x100) \
                 { \
-                    while ((mask >> r) >= 0x100) \
-                    ++r; \
+                    while (((mask) >> (r)) >= 0x100) \
+                    ++(r); \
                 } \
-                else if (mask && mask < 0x80) \
+                else if ((mask) && (mask) < 0x80) \
                 { \
-                    while ((mask << l) < 0x80) \
-                    ++l; \
+                    while (((mask) << (l)) < 0x80) \
+                    ++(l); \
                 }
 
                 unsigned rShiftL = 0, gShiftL = 0, bShiftL = 0, aShiftL = 0;
@@ -760,7 +760,7 @@ bool Image::BeginLoad(Deserializer& source)
             return false;
         }
         const uint8_t WEBP[TAG_SIZE] = {'W', 'E', 'B', 'P'};
-        if (memcmp(fourCC, WEBP, TAG_SIZE))
+        if (memcmp(fourCC, WEBP, TAG_SIZE) != 0)
         {
             // VP8_STATUS_BITSTREAM_ERROR
             URHO3D_LOGERROR("Invalid header");

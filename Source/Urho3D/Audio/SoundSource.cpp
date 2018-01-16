@@ -545,7 +545,7 @@ void SoundSource::PlayLockless(Sound* sound)
     sound_.Reset();
 }
 
-void SoundSource::PlayLockless(SharedPtr<SoundStream> stream)
+void SoundSource::PlayLockless(const SharedPtr<SoundStream>& stream)
 {
     // Reset the time position in any case
     timePosition_ = 0.0f;
